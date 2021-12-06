@@ -9,6 +9,7 @@ class Game:
         self.window = pygame.display.set_mode((800, 600), pygame.SCALED)
         pygame.display.set_caption("Gothicvania")
         self.running = True
+        self.level = None
         self.clock = pygame.time.Clock()
 
     def update(self):
@@ -25,9 +26,9 @@ class Game:
                 if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.running = False
 
+            self.clock.tick(60)
             self.update()
             pygame.display.flip()
-            self.clock.tick(60)
 
         pygame.quit()
         sys.exit()
