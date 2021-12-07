@@ -1,5 +1,6 @@
 import pygame
 import pyganim
+from physics import KinematicBody
 from utils import find_file
 from pygame.sprite import AbstractGroup
 
@@ -15,6 +16,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=pos)
         self.direction = pygame.math.Vector2(0, 0)
         self.player_speed = 4
+        self.body = KinematicBody(mass=10)
         self.facing_right = True
         self.walking = True
         self.attacking = False
