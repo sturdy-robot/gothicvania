@@ -1,6 +1,6 @@
 import pygame
 import pyganim
-from physics import KinematicBody
+import pymunk
 from utils import find_file
 from pygame.sprite import AbstractGroup
 
@@ -14,9 +14,10 @@ class Player(pygame.sprite.Sprite):
         self.current_animation = self.animations["idle_right"]
         self.image = self.current_animation.get_current_frame()
         self.rect = self.image.get_rect(topleft=pos)
-        self.direction = pygame.math.Vector2(0, 0)
-        self.player_speed = 4
-        self.body = KinematicBody(mass=10)
+        self.player_speed = 4.0
+        self.body = pymunk.Body(1, 0, body_type=pymunk.Body.DYNAMIC)
+        self.body.position = pos
+        self.shape = pymunk.Poly.create_box(self.body, size=self.rect.size)
         self.facing_right = True
         self.walking = True
         self.attacking = False
@@ -53,25 +54,26 @@ class Player(pygame.sprite.Sprite):
 
         if not self.attacking:
             if keys[pygame.K_RIGHT]:
-                self.direction.x = 1
+
                 self.current_animation = self.animations["run_right"]
                 self.facing_right = True
                 self.walking = True
             elif keys[pygame.K_LEFT]:
-                self.direction.x = -1
+
                 self.current_animation = self.animations["run_left"]
                 self.facing_right = False
                 self.walking = True
             else:
-                self.direction.x = 0
+                # self.body.velocity = (0, 0)
                 self.walking = False
                 self.attacking = False
                 if self.facing_right:
                     self.current_animation = self.animations["idle_right"]
                 else:
                     self.current_animation = self.animations["idle_left"]
+
         if keys[pygame.K_q]:
-            self.direction.x = 0
+            # self.body.velocity = (0, 0)
             self.attacking = True
             self.walking = False
             if self.facing_right:
@@ -84,7 +86,8 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         self.get_input()
-        self.rect.x += self.direction.x * self.player_speed
+        self.rect.x += self.body.velocity.x
+        self.rect.y += self.body.velocity.y
         if (
             self.current_animation
             in [self.animations["attack_right"], self.animations["attack_left"]]
