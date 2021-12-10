@@ -9,6 +9,6 @@ class Tile(pygame.sprite.Sprite):
         self.image.fill('black')
         self.rect = self.image.get_rect(topleft=pos)
         self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
-        self.body.position = pos
+        self.body.position = pos[0], pos[1]
         self.shape = pymunk.Poly.create_box(self.body, size=self.rect.size)
         self.window = window
