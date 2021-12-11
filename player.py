@@ -15,9 +15,10 @@ class Player(pygame.sprite.Sprite):
         self.image = self.current_animation.get_current_frame()
         self.rect = self.image.get_rect(topleft=pos)
         self.player_speed = 5.0
-        self.body = pymunk.Body(1000.0, 150, body_type=pymunk.Body.DYNAMIC)
+        self.body = pymunk.Body(2, 100, body_type=pymunk.Body.DYNAMIC)
         self.body.position = pos[0], pos[1]
         self.shape = pymunk.Poly.create_box(self.body, size=self.rect.size)
+        self.shape.friction = 1.0
         self.constraints = pymunk.constraints.Constraint
         self.facing_right = True
         self.walking = False
@@ -56,12 +57,12 @@ class Player(pygame.sprite.Sprite):
 
         if not self.attacking:
             if keys[pygame.K_RIGHT]:
-                # self.body.velocity = 1, self.body.space.gravity.y
+                self.body.apply_force_at_local_point(force=(200, 0))
                 self.current_animation = self.animations["run_right"]
                 self.facing_right = True
                 self.walking = True
             elif keys[pygame.K_LEFT]:
-                # self.body.velocity = -1, self.body.space.gravity.y
+                self.body.apply_force_at_local_point(force=(-200, 0))
                 self.current_animation = self.animations["run_left"]
                 self.facing_right = False
                 self.walking = True
@@ -74,7 +75,7 @@ class Player(pygame.sprite.Sprite):
                     self.current_animation = self.animations["idle_left"]
 
         if keys[pygame.K_q]:
-            # self.body.velocity = 0, self.body.space.gravity.y
+            self.body.velocity = (0,0)
             self.attacking = True
             self.walking = False
             if self.facing_right:
@@ -97,10 +98,8 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         self.get_input()
-        self.rect.x = self.body.position.x
-        self.rect.y = self.body.position.y
-        # self.rect.x += self.body.velocity.x * self.player_speed
-        # self.rect.y += self.body.velocity.y
+        self.rect.x = int(self.body.position.x)
+        self.rect.y = int(self.body.position.y)
         if (
             self.current_animation
             in [

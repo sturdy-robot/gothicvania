@@ -8,7 +8,7 @@ from tile import Tile
 class Level:
     def __init__(self, leveldata, window):
         self.space = pymunk.Space()
-        self.space.gravity = (0, 5)
+        self.space.gravity = (0, 500)
         self.player = pygame.sprite.GroupSingle(Player((0, 0), window))
         self.level = leveldata
         self.window = window
@@ -56,6 +56,7 @@ class Level:
         for sprite in self.platform.sprites():
             self.debug_messages.append(sprite.body.position)
             self.debug_messages.append((sprite.rect.x, sprite.rect.y))
+            self.debug_messages.append(sprite.rect.size)
 
     def update(self):
         self.space.step(1/60)
