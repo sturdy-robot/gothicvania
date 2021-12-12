@@ -13,12 +13,12 @@ class Player(pygame.sprite.Sprite):
         self._get_left_images()
         self.current_animation = self.animations["idle_right"]
         self.image = self.current_animation.get_current_frame()
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(center=pos)
         self.player_speed = 5.0
         self.body = pymunk.Body(2, 100, body_type=pymunk.Body.DYNAMIC)
-        self.body.position = pos[0], pos[1]
         self.shape = pymunk.Poly.create_box(self.body, size=self.rect.size)
-        self.shape.friction = 1.0
+        self.shape.friction = 1.5
+        self.body.position = pos
         self.constraints = pymunk.constraints.Constraint
         self.facing_right = True
         self.walking = False
@@ -57,16 +57,17 @@ class Player(pygame.sprite.Sprite):
 
         if not self.attacking:
             if keys[pygame.K_RIGHT]:
-                self.body.apply_force_at_local_point(force=(200, 0))
+                self.body.apply_force_at_local_point(force=(100, 0))
                 self.current_animation = self.animations["run_right"]
                 self.facing_right = True
                 self.walking = True
             elif keys[pygame.K_LEFT]:
-                self.body.apply_force_at_local_point(force=(-200, 0))
+                self.body.apply_force_at_local_point(force=(-100, 0))
                 self.current_animation = self.animations["run_left"]
                 self.facing_right = False
                 self.walking = True
             else:
+                self.body.apply_force_at_local_point(force=-self.body.force)
                 self.walking = False
                 self.attacking = False
                 if self.facing_right:
@@ -75,7 +76,7 @@ class Player(pygame.sprite.Sprite):
                     self.current_animation = self.animations["idle_left"]
 
         if keys[pygame.K_q]:
-            self.body.velocity = (0,0)
+            self.body.velocity = (0, 0)
             self.attacking = True
             self.walking = False
             if self.facing_right:
@@ -84,7 +85,7 @@ class Player(pygame.sprite.Sprite):
                 self.current_animation = self.animations["attack_left"]
 
         if keys[pygame.K_SPACE]:
-            #self.body.apply_force_at_local_point(force=(0, 100))
+            self.body.apply_impulse_at_local_point((0, -50))
             self.attacking = False
             self.walking = False
             self.jumping = True
@@ -96,12 +97,10 @@ class Player(pygame.sprite.Sprite):
         if not self.current_animation.is_finished():
             self.current_animation.play()
 
-        self.body.friction = 0.0 if self.walking else 1.0
-
     def update(self):
         self.get_input()
-        self.rect.x = int(self.body.position.x)
-        self.rect.y = int(self.body.position.y)
+        self.body.friction = 0.0 if self.walking else 1.0
+        self.rect.center = int(self.body.position.x), int(self.body.position.y)
         if (
             self.current_animation
             in [
