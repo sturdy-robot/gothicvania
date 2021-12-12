@@ -12,3 +12,5 @@ class Tile(pygame.sprite.Sprite):
         self.shape = pymunk.Poly.create_box(self.body, size=self.rect.size)
         self.body.position = pos[0], pos[1]
         self.window = window
+        self.shape.friction = 0.5
+

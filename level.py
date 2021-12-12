@@ -88,7 +88,6 @@ class Level:
         self.debug_messages.append(force)
 
     def update(self):
-        self.space.step(1/60)
         self.space.reindex_shapes_for_body(self.player.sprite.body)
         self.platform.draw(self.window)
         self.player.update()

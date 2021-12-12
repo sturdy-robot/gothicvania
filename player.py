@@ -24,6 +24,7 @@ class Player(pygame.sprite.Sprite):
         self.walking = False
         self.jumping = True
         self.attacking = False
+        self.on_ground = False
 
     def _get_images(self):
         return {
@@ -57,17 +58,16 @@ class Player(pygame.sprite.Sprite):
 
         if not self.attacking:
             if keys[pygame.K_RIGHT]:
-                self.body.apply_force_at_local_point(force=(100, 0))
+                self.body.apply_force_at_local_point(force=(1000, 0))
                 self.current_animation = self.animations["run_right"]
                 self.facing_right = True
                 self.walking = True
             elif keys[pygame.K_LEFT]:
-                self.body.apply_force_at_local_point(force=(-100, 0))
+                self.body.apply_force_at_local_point(force=(-1000, 0))
                 self.current_animation = self.animations["run_left"]
                 self.facing_right = False
                 self.walking = True
             else:
-                self.body.apply_force_at_local_point(force=-self.body.force)
                 self.walking = False
                 self.attacking = False
                 if self.facing_right:
@@ -76,7 +76,6 @@ class Player(pygame.sprite.Sprite):
                     self.current_animation = self.animations["idle_left"]
 
         if keys[pygame.K_q]:
-            self.body.velocity = (0, 0)
             self.attacking = True
             self.walking = False
             if self.facing_right:
@@ -85,7 +84,7 @@ class Player(pygame.sprite.Sprite):
                 self.current_animation = self.animations["attack_left"]
 
         if keys[pygame.K_SPACE]:
-            self.body.apply_impulse_at_local_point((0, -50))
+            self.body.apply_impulse_at_local_point((0, -80))
             self.attacking = False
             self.walking = False
             self.jumping = True

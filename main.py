@@ -27,6 +27,7 @@ class Game:
                     self.running = False
 
             self.clock.tick(60)
+            self.level.space.step(1/60)
             self.update()
             pygame.display.flip()
 
