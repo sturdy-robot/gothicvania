@@ -1,5 +1,4 @@
 import pygame
-import pymunk
 
 from player import Player
 from tile import Tile
@@ -7,42 +6,21 @@ from tile import Tile
 
 class Level:
     def __init__(self, leveldata, window):
-        self.space = pymunk.Space()
-        self.space.gravity = (0, 500)
-        self.player = pygame.sprite.GroupSingle(Player((0, 0), window))
+        # Level-related data
+        self.gravity = -1
         self.level = leveldata
+
+        # Window to draw
         self.window = window
+
+        # Sprites and sprite groups
         self.platform = pygame.sprite.Group()
-        self.platform.add(Tile((400, 600), self.window))
-        for sprite in self.platform.sprites():
-            self.space.add(sprite.body, sprite.shape, self.player.sprite.body, self.player.sprite.shape)
-        self.coll_handler = self.space.add_default_collision_handler()
-        self.coll_handler.pre_solve = self.col_pre_solve
-        self.coll_handler.begin = self.col_begin
-        self.coll_handler.post_solve = self.col_post
-        self.coll_handler.separate = self.col_separate
+        self.platform.add(Tile((0, 520), self.window))
+        self.player = pygame.sprite.GroupSingle(Player((15, 200), window))
+
+        # Debug-related info
         self.font = pygame.font.Font(None, 20)
         self.debug_messages = []
-
-    @staticmethod
-    def col_pre_solve(arbiter, space, data):
-        print("pre_solve")
-        return True
-
-    @staticmethod
-    def col_begin(arbiter, space, data):
-        print("begin")
-        return True
-
-    @staticmethod
-    def col_post(arbiter, space, data):
-        print("post")
-        return True
-
-    @staticmethod
-    def col_separate(arbiter, space, data):
-        print("separate")
-        return True
 
     def display_debug(self, info, y=10, x=780):
         display_surf = pygame.display.get_surface()
@@ -51,7 +29,7 @@ class Level:
         display_surf.blit(debug_surf, debug_rect)
 
     def get_debug_messages(self):
-        self.debug_messages.append(self.player.sprite.body.position)
+        # Get player debug messages
         self.debug_messages.append((self.player.sprite.rect.x, self.player.sprite.rect.y))
         self.debug_messages.append([
             self.player.sprite.rect.topright,
@@ -59,14 +37,9 @@ class Level:
             self.player.sprite.rect.bottomleft,
             self.player.sprite.rect.topleft
         ])
-        coordinates = []
-        for v in self.player.sprite.shape.get_vertices():
-            x, y = v.rotated(self.player.sprite.shape.body.angle) + self.player.sprite.shape.body.position
-            coordinates.append((int(x), int(y)))
-        self.debug_messages.append(coordinates.copy())
-        coordinates.clear()
+
+        # Get tile debug messages
         for sprite in self.platform.sprites():
-            self.debug_messages.append(sprite.body.position)
             self.debug_messages.append((sprite.rect.x, sprite.rect.y))
             self.debug_messages.append(sprite.rect.size)
             self.debug_messages.append([
@@ -75,23 +48,14 @@ class Level:
                 sprite.rect.bottomleft,
                 sprite.rect.topleft
             ])
-            for v in sprite.shape.get_vertices():
-                x, y = v.rotated(sprite.shape.body.angle) + sprite.shape.body.position
-                coordinates.append((int(x), int(y)))
-            self.debug_messages.append(coordinates.copy())
-            coordinates.clear()
-        friction = 'Player friction: ' + str(self.player.sprite.body.friction)
-        walking = 'Walking: ' + str(self.player.sprite.walking)
-        force = 'Force: ' + str(self.player.sprite.body.force)
-        self.debug_messages.append(friction)
-        self.debug_messages.append(walking)
-        self.debug_messages.append(force)
 
     def update(self):
-        self.space.reindex_shapes_for_body(self.player.sprite.body)
+        # Update sprites
         self.platform.draw(self.window)
         self.player.update()
         self.player.draw(self.window)
+
+        # Debug messages
         self.get_debug_messages()
         for i, debug_message in enumerate(self.debug_messages):
             self.display_debug(debug_message, i * 18)

@@ -1,30 +1,39 @@
 import pygame
 import pyganim
-import pymunk
 from utils import find_file
 from pygame.sprite import AbstractGroup
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, window, *groups: AbstractGroup):
+    def __init__(self, pos, window: pygame.Surface, *groups: AbstractGroup):
         super().__init__(*groups)
         self.window = window
+
+        # Animations
         self.animations = self._get_images()
         self._get_left_images()
         self.current_animation = self.animations["idle_right"]
+
+        # Player Sprite and Rect
         self.image = self.current_animation.get_current_frame()
         self.rect = self.image.get_rect(center=pos)
+
+        # Collision
+        self.collision_rect = pygame.Rect(self.rect.topleft, (38, self.rect.height))
+        self.collision_debug = pygame.Surface(self.collision_rect.size)
+
+        # Player variables
         self.player_speed = 5.0
-        self.body = pymunk.Body(2, 100, body_type=pymunk.Body.DYNAMIC)
-        self.shape = pymunk.Poly.create_box(self.body, size=self.rect.size)
-        self.shape.friction = 1.5
-        self.body.position = pos
-        self.constraints = pymunk.constraints.Constraint
+
+        # Player status
         self.facing_right = True
         self.walking = False
-        self.jumping = True
+        self.jumping = False
         self.attacking = False
         self.on_ground = False
+
+        # Debug status
+        self.debug = True
 
     def _get_images(self):
         return {
@@ -38,6 +47,7 @@ class Player(pygame.sprite.Sprite):
         }
 
     def _get_left_images(self):
+        """Flips the player sprites from the right to left"""
         animations = {}
         for animation_key, animation in self.animations.items():
             new_key = animation_key.replace("right", "left")
@@ -49,6 +59,7 @@ class Player(pygame.sprite.Sprite):
 
     @staticmethod
     def _divide_spritesheet(image, rows=1, cols=None, time=.1, loop=True):
+        """Get images from spritesheet, turning them into Pyganimation object."""
         images = pyganim.get_images_from_sprite_sheet(image, rows=rows, cols=cols)
         frames = [(img, time) for img in images]
         return pyganim.PygAnimation(frames, loop=loop)
@@ -58,12 +69,10 @@ class Player(pygame.sprite.Sprite):
 
         if not self.attacking:
             if keys[pygame.K_RIGHT]:
-                self.body.apply_force_at_local_point(force=(1000, 0))
                 self.current_animation = self.animations["run_right"]
                 self.facing_right = True
                 self.walking = True
             elif keys[pygame.K_LEFT]:
-                self.body.apply_force_at_local_point(force=(-1000, 0))
                 self.current_animation = self.animations["run_left"]
                 self.facing_right = False
                 self.walking = True
@@ -84,7 +93,6 @@ class Player(pygame.sprite.Sprite):
                 self.current_animation = self.animations["attack_left"]
 
         if keys[pygame.K_SPACE]:
-            self.body.apply_impulse_at_local_point((0, -80))
             self.attacking = False
             self.walking = False
             self.jumping = True
@@ -96,10 +104,16 @@ class Player(pygame.sprite.Sprite):
         if not self.current_animation.is_finished():
             self.current_animation.play()
 
-    def update(self):
-        self.get_input()
-        self.body.friction = 0.0 if self.walking else 1.0
-        self.rect.center = int(self.body.position.x), int(self.body.position.y)
+        self.rect.size = self.image.get_size()
+
+    def debug_code(self):
+        if self.debug:
+            self.collision_rect.size = self.rect.size
+            self.collision_debug.fill('red')
+
+            self.window.blit(self.collision_debug, self.collision_rect)
+
+    def check_animation(self):
         if (
             self.current_animation
             in [
@@ -113,5 +127,12 @@ class Player(pygame.sprite.Sprite):
             self.attacking = False
             self.jumping = False
             self.current_animation.stop()
+
         self.image = self.current_animation.get_current_frame()
+
+    def update(self):
+        self.get_input()
+        self.check_animation()
+        if self.debug:
+            self.debug_code()
         self.window.blit(self.image, self.rect)
