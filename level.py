@@ -49,7 +49,27 @@ class Level:
                 sprite.rect.topleft
             ])
 
+    def vertical_movement_collision(self):
+        player = self.player.sprite
+        player.apply_gravity()
+        collision_sprites = self.platform.sprites()
+
+        for sprite in collision_sprites:
+            if sprite.rect.colliderect(player.collision_rect):
+                if player.direction.y > 0:
+                    player.collision_rect.bottom = sprite.rect.top
+                    player.direction.y = 0
+                    player.on_ground = True
+                elif player.direction.y < 0:
+                    player.collision_rect.top = sprite.rect.bottom
+                    player.direction.y = 0
+                    player.on_ceiling = True
+
+        if player.on_ground and player.direction.y < 0 or player.direction.y > 1:
+            player.on_ground = False
+
     def update(self):
+        self.vertical_movement_collision()
         # Update sprites
         self.platform.draw(self.window)
         self.player.update()

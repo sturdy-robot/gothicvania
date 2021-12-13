@@ -16,7 +16,7 @@ class Player(pygame.sprite.Sprite):
 
         # Player Sprite and Rect
         self.image = self.current_animation.get_current_frame()
-        self.rect = self.image.get_rect(center=pos)
+        self.rect = self.image.get_rect(bottomleft=pos)
 
         # Collision
         self.collision_rect = pygame.Rect(self.rect.topleft, (38, self.rect.height))
@@ -24,6 +24,9 @@ class Player(pygame.sprite.Sprite):
 
         # Player variables
         self.player_speed = 5.0
+        self.gravity = 0.8
+        self.jump_speed = -25
+        self.direction = pygame.math.Vector2(0, 0)
 
         # Player status
         self.facing_right = True
@@ -31,6 +34,7 @@ class Player(pygame.sprite.Sprite):
         self.jumping = False
         self.attacking = False
         self.on_ground = False
+        self.on_ceiling = False
 
         # Debug status
         self.debug = True
@@ -69,14 +73,17 @@ class Player(pygame.sprite.Sprite):
 
         if not self.attacking:
             if keys[pygame.K_RIGHT]:
+                self.direction.x = 1
                 self.current_animation = self.animations["run_right"]
                 self.facing_right = True
                 self.walking = True
             elif keys[pygame.K_LEFT]:
+                self.direction.x = -1
                 self.current_animation = self.animations["run_left"]
                 self.facing_right = False
                 self.walking = True
             else:
+                self.direction.x = 0
                 self.walking = False
                 self.attacking = False
                 if self.facing_right:
@@ -92,7 +99,7 @@ class Player(pygame.sprite.Sprite):
             else:
                 self.current_animation = self.animations["attack_left"]
 
-        if keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE] and self.on_ground:
             self.attacking = False
             self.walking = False
             self.jumping = True
@@ -106,12 +113,19 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.size = self.image.get_size()
 
+    def apply_gravity(self):
+        self.direction.y += self.gravity
+        self.collision_rect.y += self.direction.y
+        self.rect.y = self.collision_rect.y
+
     def debug_code(self):
         if self.debug:
             self.collision_rect.size = self.rect.size
-            self.collision_debug.fill('red')
+            self.collision_debug = pygame.Surface(self.collision_rect.size)
+            pygame.draw.rect(self.window, 'red', self.collision_rect, 1)
 
-            self.window.blit(self.collision_debug, self.collision_rect)
+    def jump(self):
+        self.direction.y = self.jump_speed
 
     def check_animation(self):
         if (
@@ -130,8 +144,15 @@ class Player(pygame.sprite.Sprite):
 
         self.image = self.current_animation.get_current_frame()
 
+    def move(self):
+        if self.walking:
+            self.rect.x += self.direction.x * self.player_speed
+            if self.debug:
+                self.collision_rect.x += self.direction.x * self.player_speed
+
     def update(self):
         self.get_input()
+        self.move()
         self.check_animation()
         if self.debug:
             self.debug_code()
