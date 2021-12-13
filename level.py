@@ -2,6 +2,7 @@ import pygame
 
 from player import Player
 from tile import Tile
+from debug_status import DEBUG_STATUS
 
 
 class Level:
@@ -19,6 +20,7 @@ class Level:
         self.player = pygame.sprite.GroupSingle(Player((15, 200), window))
 
         # Debug-related info
+        self.debug = DEBUG_STATUS
         self.font = pygame.font.Font(None, 20)
         self.debug_messages = []
 
@@ -69,14 +71,15 @@ class Level:
             player.on_ground = False
 
     def update(self):
-        self.vertical_movement_collision()
         # Update sprites
         self.platform.draw(self.window)
         self.player.update()
+        self.vertical_movement_collision()
         self.player.draw(self.window)
 
         # Debug messages
-        self.get_debug_messages()
-        for i, debug_message in enumerate(self.debug_messages):
-            self.display_debug(debug_message, i * 18)
-        self.debug_messages.clear()
+        if self.debug:
+            self.get_debug_messages()
+            for i, debug_message in enumerate(self.debug_messages):
+                self.display_debug(debug_message, i * 18)
+            self.debug_messages.clear()
