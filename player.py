@@ -161,11 +161,12 @@ class Player(pygame.sprite.Sprite):
 
     def apply_gravity(self):
         self.direction.y += self.gravity
-        self.collision_rect.y += self.direction.y
-        self.rect.y = self.collision_rect.y
+        self.rect.y += self.direction.y
 
     def debug_code(self):
         self.collision_rect.size = self.rect.size
+        self.collision_rect.x = self.rect.x
+        self.collision_rect.y = self.rect.y
         self.collision_debug = pygame.Surface(self.collision_rect.size)
         pygame.draw.rect(self.window, 'red', self.collision_rect, 1)
 
@@ -191,7 +192,6 @@ class Player(pygame.sprite.Sprite):
 
     def move(self):
         self.rect.x += self.direction.x * self.player_speed
-        self.collision_rect.x += self.direction.x * self.player_speed
 
     def update(self):
         self.get_input()

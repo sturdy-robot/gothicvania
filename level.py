@@ -57,13 +57,13 @@ class Level:
         collision_sprites = self.platform.sprites()
 
         for sprite in collision_sprites:
-            if sprite.rect.colliderect(player.collision_rect):
+            if sprite.rect.colliderect(player.rect):
                 if player.direction.y > 0:
-                    player.collision_rect.bottom = sprite.rect.top
+                    player.rect.bottom = sprite.rect.top
                     player.direction.y = 0
                     player.on_ground = True
                 elif player.direction.y < 0:
-                    player.collision_rect.top = sprite.rect.bottom
+                    player.rect.top = sprite.rect.bottom
                     player.direction.y = 0
                     player.on_ceiling = True
 
