@@ -1,8 +1,9 @@
 import pygame
+from pygame.sprite import AbstractGroup
+
 import pyganim
 from debug_status import DEBUG_STATUS
 from utils import find_file
-from pygame.sprite import AbstractGroup
 
 
 class Player(pygame.sprite.Sprite):
@@ -20,8 +21,8 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(bottomleft=pos)
 
         # Collision
-        self.collision_rect = pygame.Rect(self.rect.topleft, (38, self.rect.height))
-        self.collision_debug = pygame.Surface(self.collision_rect.size)
+        self.debug_rect = pygame.Rect(self.rect.topleft, (38, self.rect.height))
+        self.collision_debug = pygame.Surface(self.debug_rect.size)
 
         # Player variables
         self.player_speed = 5.0
@@ -41,25 +42,25 @@ class Player(pygame.sprite.Sprite):
         self.debug = DEBUG_STATUS
 
     def _get_images(self):
-        images = self.extract_images(find_file('warrior.png'), rows=17, cols=6)
-        return {
-            "idle_right": self.__get_image_and_remove_from_list(images, 6, time=.2),
-            "run_right": self.__get_image_and_remove_from_list(images, 8),
-            "attack_right": self.__get_image_and_remove_from_list(images, 12, time=.05, loop=False),
-            "death_right": self.__get_image_and_remove_from_list(images, 11, time=.5),
-            "hurt_right": self.__get_image_and_remove_from_list(images, 4),
-            "jump_right": self.__get_image_and_remove_from_list(images, 3, time=.6),
-        }
-        # old sprites
+        # images = self.extract_images(find_file('warrior.png'), rows=17, cols=6)
         # return {
-        #     "idle_right": self._divide_spritesheet(find_file('gothic-hero-idle.png'), cols=4, time=.25),
-        #     "run_right": self._divide_spritesheet(find_file('gothic-hero-run.png'), cols=12),
-        #     "jump_right": self._divide_spritesheet(find_file('gothic-hero-jump.png'), cols=5, loop=False),
-        #     "attack_right": self._divide_spritesheet(find_file('gothic-hero-attack.png'), cols=6, time=.05, loop=False),
-        #     "hurt_right": self._divide_spritesheet(find_file('gothic-hero-hurt.png'), cols=3, loop=False),
-        #     "jump_attack_right": self._divide_spritesheet(find_file('gothic-hero-jump-attack.png'), cols=6, loop=False),
-        #     "jump_climb_right": self._divide_spritesheet(find_file('gothic-hero-jump.png'), cols=7, loop=False),
+        #     "idle_right": self.__get_image_and_remove_from_list(images, 6, time=.2),
+        #     "run_right": self.__get_image_and_remove_from_list(images, 8),
+        #     "attack_right": self.__get_image_and_remove_from_list(images, 12, time=.05, loop=False),
+        #     "death_right": self.__get_image_and_remove_from_list(images, 11, time=.5),
+        #     "hurt_right": self.__get_image_and_remove_from_list(images, 4),
+        #     "jump_right": self.__get_image_and_remove_from_list(images, 3, time=.6),
         # }
+        # old sprites
+        return {
+            "idle_right": self._divide_spritesheet(find_file('gothic-hero-idle.png'), cols=4, time=.25),
+            "run_right": self._divide_spritesheet(find_file('gothic-hero-run.png'), cols=12),
+            "jump_right": self._divide_spritesheet(find_file('gothic-hero-jump.png'), cols=5, loop=False),
+            "attack_right": self._divide_spritesheet(find_file('gothic-hero-attack.png'), cols=6, time=.05, loop=False),
+            "hurt_right": self._divide_spritesheet(find_file('gothic-hero-hurt.png'), cols=3, loop=False),
+            "jump_attack_right": self._divide_spritesheet(find_file('gothic-hero-jump-attack.png'), cols=6, loop=False),
+            "jump_climb_right": self._divide_spritesheet(find_file('gothic-hero-jump.png'), cols=7, loop=False),
+        }
 
     def _get_left_images(self):
         """Flips the player sprites from the right to left"""
@@ -96,7 +97,7 @@ class Player(pygame.sprite.Sprite):
         images = pyganim.get_images_from_sprite_sheet(image, rows=rows, cols=cols)
         k, m = divmod(len(images), cols)
         return [
-            images[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)]
+            images[i * k + min(i, m): (i + 1) * k + min(i + 1, m)]
             for i in range(cols)
         ]
 
@@ -164,25 +165,26 @@ class Player(pygame.sprite.Sprite):
         self.rect.y += self.direction.y
 
     def debug_code(self):
-        self.collision_rect.size = self.rect.size
-        self.collision_rect.x = self.rect.x
-        self.collision_rect.y = self.rect.y
-        self.collision_debug = pygame.Surface(self.collision_rect.size)
-        pygame.draw.rect(self.window, 'red', self.collision_rect, 1)
+        self.debug_rect.size = self.rect.size
+        self.debug_rect.x = self.rect.x
+        self.debug_rect.y = self.rect.y
+        self.collision_debug = pygame.Surface(self.debug_rect.size)
+        pygame.draw.rect(self.window, 'red', self.debug_rect, 1)
 
     def jump(self):
         self.direction.y = self.jump_speed
 
     def check_animation(self):
         if (
-            self.current_animation
-            in [
-                self.animations["attack_right"],
-                self.animations["attack_left"],
-                self.animations["jump_right"],
-                self.animations["jump_left"]
-            ]
-            and self.current_animation.is_finished()
+                self.current_animation
+                in
+                [
+                    self.animations["attack_right"],
+                    self.animations["attack_left"],
+                    self.animations["jump_right"],
+                    self.animations["jump_left"]
+                ]
+                and self.current_animation.is_finished()
         ):
             self.attacking = False
             self.jumping = False
