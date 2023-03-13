@@ -46,29 +46,30 @@ def get_images_from_sprite_sheet(filename, width=None, height=None, rows=None, c
 
     # there should be exactly 1 set of arguments passed (i.e. don't pass width/height AND rows/cols)
     args_type = ''
-    if (width is not None or height is not None) and (args_type == ''):
+    if (width is not None or height is not None) and not args_type:
         args_type = 'width/height'
         assert width is not None and height is not None, 'Both width and height must be specified'
         assert type(
             width) == int and width > 0, 'width arg must be a non-zero positive integer'
         assert type(
             height) == int and height > 0, 'height arg must be a non-zero positive integer'
-    if (rows is not None or cols is not None) and (args_type == ''):
+    if (rows is not None or cols is not None) and not args_type:
         args_type = 'rows/cols'
         assert rows is not None and cols is not None, 'Both rows and cols must be specified'
         assert type(
             rows) == int and rows > 0, 'rows arg must be a non-zero positive integer'
         assert type(
             cols) == int and cols > 0, 'cols arg must be a non-zero positive integer'
-    if (rects is not None) and (args_type == ''):
+    if rects is not None and not args_type:
         args_type = 'rects'
         for i, rect in enumerate(rects):
-            assert len(
-                rect) == 4, 'rect at index %s is not a sequence of four ints: (left, top, width, height)' % (i)
+            assert (
+                len(rect) == 4
+            ), f'rect at index {i} is not a sequence of four ints: (left, top, width, height)'
 
             assert (type(rect[0]), type(rect[1]), type(rect[2]), type(
                 rect[3])) == (int, int, int, int), 'rect '
-    if args_type == '':
+    if not args_type:
         raise ValueError(
             'Only pass one set of args: width & height, rows & cols, *or* rects')
 
@@ -79,24 +80,24 @@ def get_images_from_sprite_sheet(filename, width=None, height=None, rows=None, c
         sprite_height = sheet_image.get_height() // rows
 
         for y in range(0, sheet_image.get_height(), sprite_height):
-            if y + sprite_height > sheet_image.get_height():
-                continue
-            for x in range(0, sheet_image.get_width(), sprite_width):
-                if x + sprite_width > sheet_image.get_width():
-                    continue
-
-                rects.append((x, y, sprite_width, sprite_height))
-
+            if y + sprite_height <= sheet_image.get_height():
+                rects.extend(
+                    (x, y, sprite_width, sprite_height)
+                    for x in range(0, sheet_image.get_width(), sprite_width)
+                    if x + sprite_width <= sheet_image.get_width()
+                )
     elif args_type == 'width/height':
         for y in range(0, sheet_image.get_height(), (sheet_image.get_height() // height)):
-            if y + height > sheet_image.get_height():
-                continue
-            for x in range(0, sheet_image.get_width(), (sheet_image.get_width() // width)):
-                if x + width > sheet_image.get_width():
-                    continue
-
-                rects.append((x, y, width, height))
-
+            if y + height <= sheet_image.get_height():
+                rects.extend(
+                    (x, y, width, height)
+                    for x in range(
+                        0,
+                        sheet_image.get_width(),
+                        (sheet_image.get_width() // width),
+                    )
+                    if x + width <= sheet_image.get_width()
+                )
     # create a list of Surface objects from the sprite sheet
     returned_surfaces = []
     for rect in rects:
@@ -158,12 +159,14 @@ class PygAnimation(object):
             for i in range(self.num_frames):
                 # load each frame of animation into _images
                 frame = frames[i]
-                assert type(frame) in (list, tuple) and len(
-                    frame) == 2, 'Frame %s has incorrect format.' % (i)
+                assert (
+                    type(frame) in (list, tuple) and len(frame) == 2
+                ), f'Frame {i} has incorrect format.'
                 assert type(frame[0]) in (
-                    str, pygame.Surface), 'Frame %s image must be a string filename or a pygame.Surface' % (i)
-                assert frame[1] > 0, 'Frame %s duration must be greater than zero.' % (
-                    i)
+                    str,
+                    pygame.Surface,
+                ), f'Frame {i} image must be a string filename or a pygame.Surface'
+                assert frame[1] > 0, f'Frame {i} duration must be greater than zero.'
                 if type(frame[0]) == str:
                     frame = (pygame.image.load(
                         frame[0]).convert_alpha(), frame[1])
@@ -175,8 +178,9 @@ class PygAnimation(object):
         # Internal method to get the start times based off of the _durations list.
         # Don't call this method.
         start_times = [0]
-        for i in range(self.num_frames):
-            start_times.append(start_times[-1] + self._durations[i])
+        start_times.extend(
+            start_times[-1] + self._durations[i] for i in range(self.num_frames)
+        )
         return start_times
 
     def reverse(self):
@@ -671,7 +675,7 @@ class PygAnimation(object):
 
         # Set the elapsed time to a specific value.
         if self._loop:
-            elapsed = elapsed % self._start_times[-1]
+            elapsed %= self._start_times[-1]
         else:
             elapsed = get_in_between_value(0, elapsed, self._start_times[-1])
 
@@ -732,7 +736,7 @@ class PygAnimation(object):
 
 class PygConductor(object):
     def __init__(self, *animations):
-        assert len(animations) > 0, 'at least one PygAnimation object is required'
+        assert animations, 'at least one PygAnimation object is required'
 
         self._animations = []
         self.add(*animations)
@@ -896,11 +900,7 @@ def find_start_time(start_times, target):
         i = int((ub - lb) / 2) + lb
 
         if start_times[i] == target or (start_times[i] < target and start_times[i+1] > target):
-            if i == len(start_times):
-                return i - 1
-            else:
-                return i
-
+            return i - 1 if i == len(start_times) else i
         if start_times[i] < target:
             lb = i
         elif start_times[i] > target:

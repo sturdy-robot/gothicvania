@@ -10,5 +10,4 @@ def find_file(filename: Union[str, Path]):
     for root, _, files in os.walk(ROOT_DIR):
         if filename in files:
             return os.path.join(root, filename)
-    else:
-        raise FileNotFoundError("File not found!")
+    raise FileNotFoundError("File not found!")
