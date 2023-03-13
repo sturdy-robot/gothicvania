@@ -112,11 +112,7 @@ class Player(pygame.sprite.Sprite):
         return pyganim.PygAnimation(frames, loop=loop)
 
     def set_animation(self, animation):
-        if self.facing_right:
-            animation = "{}_right".format(animation)
-        else:
-            animation = "{}_left".format(animation)
-
+        animation = f"{animation}_right" if self.facing_right else f"{animation}_left"
         self.current_animation = self.animations[animation]
 
     def get_input(self):
